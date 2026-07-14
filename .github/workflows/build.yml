@@ -1,0 +1,56 @@
+name: Build AiColorize Executable
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+  release:
+    types:
+      - published
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: pip install pyinstaller pyqt5 requests numpy pillow opencv-python onnxruntime
+
+    - name: Run PyInstaller
+      run: pyinstaller --noconsole --onefile --name "AiColorize" app.py
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: AiColorize-Windows-Executable
+        path: dist/AiColorize.exe
+
+    - name: Create Release (if tag push)
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v2
+      with:
+        files: dist/AiColorize.exe
+        name: AiColorize ${{ github.ref_name }}
+        body: | 
+          🎉 AiColorize ${{ github.ref_name }} 正式发布！
+          
+          本次更新主要增加了批量处理漫画图片的功能，并优化了模型下载体验。
+          
+          主要特性：
+          - **批量上色模式**：一键处理整个文件夹的漫画图片。
+          - **增强型模型下载器**：内置多镜像源，下载更稳定。
+          - **GUI 优化**：界面更友好，操作更便捷。
+          
+          欢迎下载体验！
+        tag_name: ${{ github.ref_name }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
