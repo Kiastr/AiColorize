@@ -16,16 +16,12 @@ AiColorize 是一款基于 AI 技术的桌面图片上色工具，集成了 **De
 本项目推荐使用预打包的 Python 环境：
 [下载 Python 环境包](https://github.com/Kiastr/JhentaiSR/releases/download/python-env-v1/python_env_deoldify.zip)
 
-### 打包为 .exe
+### 打包为 .exe (Windows)
 
-1. 下载上述环境包并解压。
-2. 将本项目中的 `app.py` 放入解压后的文件夹。
-3. 在该文件夹下运行：
-   ```bash
-   python\python.exe -m pip install pyinstaller pyqt5
-   python\python.exe -m PyInstaller --noconsole --onefile --name "AiColorize" app.py
-   ```
-4. 在 `dist` 目录下即可找到 `AiColorize.exe`。
+1. 下载上述[环境包](https://github.com/Kiastr/JhentaiSR/releases/download/python-env-v1/python_env_deoldify.zip)并解压。
+2. 将本项目中的 `app.py`, `colorize.py`, `build.bat` 放入解压后的文件夹（与 `python` 文件夹同级）。
+3. 双击运行 `build.bat`。
+4. 等待脚本运行完成，在生成的 `dist` 目录下即可找到 `AiColorize.exe`。
 
 ## 模型下载
 
