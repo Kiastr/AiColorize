@@ -11,7 +11,7 @@
 - **GPU 加速**：支持 NVIDIA GPU (CUDA) 加速，大幅提升处理速度。
 - **简单易用**：直观的图形用户界面，一键操作，无需命令行知识。
 
-## 🚀 使用方法
+## 🚀 使用方法（以windows为例）
 
 1.  **下载程序**：前往 [Releases 页面](https://github.com/Kiastr/AiColorize/releases) 下载最新的 `AiColorize.exe`。
 2.  **运行程序**：双击下载的 `AiColorize.exe` 启动工具。
