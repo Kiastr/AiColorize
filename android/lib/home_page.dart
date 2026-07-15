@@ -3,6 +3,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'models/model_config.dart';
 import 'services/colorize_service.dart';
 import 'services/model_downloader.dart';
@@ -42,14 +43,37 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _requestPermissions();
+    _initApp();
+  }
+
+  Future<void> _initApp() async {
+    await _requestPermissions();
+    await _loadSavedModel();
   }
 
   Future<void> _requestPermissions() async {
+    // 申请存储权限（传统文件访问）
     await Permission.storage.request();
-    if (await Permission.photos.request().isDenied) {
-      // 低版本用 storage 已覆盖
+    // 申请管理所有文件权限 (Android 11+)，这能解决 Directory.listSync() 无法访问外部目录的问题
+    if (await Permission.manageExternalStorage.request().isGranted) {
+      debugPrint("Manage External Storage granted");
     }
+  }
+
+  Future<void> _loadSavedModel() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedPath = prefs.getString('last_model_path');
+    if (savedPath != null && File(savedPath).existsSync()) {
+      setState(() {
+        _modelPath = savedPath;
+        _log = '已恢复上次使用的模型';
+      });
+    }
+  }
+
+  Future<void> _saveModelPath(String path) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('last_model_path', path);
   }
 
   ModelConfig get _currentConfig => modelConfigs[_engine]!;
@@ -82,6 +106,7 @@ class _HomePageState extends State<HomePage> {
       _modelPath = path;
       _log = '已选择本地模型: $path';
     });
+    _saveModelPath(path);
   }
 
   Future<void> _downloadModel() async {
@@ -109,6 +134,7 @@ class _HomePageState extends State<HomePage> {
         _modelPath = savePath;
         _log = '模型下载完成: $savePath';
       });
+      _saveModelPath(savePath);
     } catch (e) {
       setState(() {
         _log = '下载失败: $e';
@@ -208,8 +234,9 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _runBatch() async {
     final files = Directory(_inputDir!)
-        .listSync()
-        .whereType<File>()
+        .listSync(recursive: false, followLinks: false)
+        .where((entity) => entity is File)
+        .cast<File>()
         .where((f) {
           final ext = f.path.toLowerCase();
           return ext.endsWith('.png') ||

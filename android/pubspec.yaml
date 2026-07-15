@@ -20,6 +20,7 @@ dependencies:
   path_provider: ^2.0.15
   # 存储/相册权限
   permission_handler: ^9.2.0
+  shared_preferences: ^2.0.15
 
 dev_dependencies:
   flutter_test:
