@@ -9,7 +9,9 @@ import 'services/colorize_service.dart';
 import 'services/model_downloader.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final ValueNotifier<ThemeMode> themeMode;
+
+  HomePage({super.key, required this.themeMode});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -309,6 +311,18 @@ class _HomePageState extends State<HomePage> {
     if (mounted) setState(() => _log = msg);
   }
 
+  // 切换主题模式并持久化（跟随系统 / 浅色 / 深色）
+  Future<void> _setThemeMode(ThemeMode mode) async {
+    widget.themeMode.value = mode; // 立即生效，MaterialApp 通过 ValueListenableBuilder 重渲
+    final prefs = await SharedPreferences.getInstance();
+    final key = mode == ThemeMode.light
+        ? 'light'
+        : mode == ThemeMode.dark
+            ? 'dark'
+            : 'system';
+    await prefs.setString('theme_mode', key);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -321,6 +335,8 @@ class _HomePageState extends State<HomePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildModeSection(),
+            const SizedBox(height: 16),
+            _buildAppearanceSection(),
             const SizedBox(height: 16),
             _buildConfigSection(),
             const SizedBox(height: 16),
@@ -368,6 +384,46 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAppearanceSection() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('外观 / 主题', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            ValueListenableBuilder<ThemeMode>(
+              valueListenable: widget.themeMode,
+              builder: (context, mode, _) {
+                return Wrap(
+                  spacing: 8,
+                  children: [
+                    ChoiceChip(
+                      label: const Text('跟随系统'),
+                      selected: mode == ThemeMode.system,
+                      onSelected: (_) => _setThemeMode(ThemeMode.system),
+                    ),
+                    ChoiceChip(
+                      label: const Text('浅色'),
+                      selected: mode == ThemeMode.light,
+                      onSelected: (_) => _setThemeMode(ThemeMode.light),
+                    ),
+                    ChoiceChip(
+                      label: const Text('深色'),
+                      selected: mode == ThemeMode.dark,
+                      onSelected: (_) => _setThemeMode(ThemeMode.dark),
+                    ),
+                  ],
+                );
+              },
             ),
           ],
         ),
@@ -507,10 +563,12 @@ class _HomePageState extends State<HomePage> {
           width: double.infinity,
           height: 50,
           child: ElevatedButton(
-            style: ElevatedButton.styleFrom(primary: Colors.teal),
+            style: ElevatedButton.styleFrom(),
             onPressed: _processing ? null : _start,
             child: _processing
-                ? const CircularProgressIndicator(color: Colors.white)
+                ? CircularProgressIndicator(
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  )
                 : const Text('一键开始上色',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           ),
@@ -529,7 +587,9 @@ class _HomePageState extends State<HomePage> {
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+        color: Theme.of(context).brightness == Brightness.dark
+            ? Colors.grey[800]
+            : Colors.grey[100],
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(_log.isEmpty ? '等待操作...' : _log,
