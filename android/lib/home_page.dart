@@ -66,16 +66,22 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _pickLocalModel() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['onnx'],
-    );
-    if (result != null && result.files.isNotEmpty) {
-      setState(() {
-        _modelPath = result.files.first.path;
-        _log = '已选择本地模型: $_modelPath';
-      });
+    // Android 对自定义扩展名(.onnx)过滤不可靠（无标准 MIME，常选不到文件），
+    // 改用 FileType.any 让用户选任意文件
+    final result = await FilePicker.platform.pickFiles(type: FileType.any);
+    if (result == null || result.files.isEmpty) return;
+    final file = result.files.first;
+    String? path = file.path;
+    // 个别 Android 设备 path 为 null（仅返回 uri），提示用户放到模型目录
+    if (path == null || !File(path).existsSync()) {
+      setState(() => _log = '无法直接读取所选文件路径。请把 .onnx 模型复制到模型目录'
+          '(/Android/data/com.kiastr.aicolorize/files/models/)后重试，或用「自动下载模型」。');
+      return;
     }
+    setState(() {
+      _modelPath = path;
+      _log = '已选择本地模型: $path';
+    });
   }
 
   Future<void> _downloadModel() async {
