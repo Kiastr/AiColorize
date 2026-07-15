@@ -68,13 +68,13 @@ final Map<String, ModelConfig> modelConfigs = {
   ),
   'ddcolor': ModelConfig(
     key: 'ddcolor',
-    filename: 'ddcolor-int8.onnx',
-    label: 'DDColor (int8, 59MB, 漫画风)',
+    filename: 'ddcolor_fp32.onnx',
+    label: 'DDColor (fp32, 934MB, 漫画风)',
     sources: [
-      ..._githubSources('ddcolor-int8.onnx'),
+      ..._githubSources('ddcolor_fp32.onnx'),
       const ModelSource(
-        'HuggingFace Faridzar (备用)',
-        'https://huggingface.co/Faridzar/ddcolor-mirror/resolve/main/ddcolor-int8.onnx',
+        'HuggingFace facefusion (备用)',
+        'https://huggingface.co/facefusion/models-3.0.0/resolve/main/ddcolor.onnx',
       ),
     ],
   ),

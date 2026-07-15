@@ -17,7 +17,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   // 配置状态
   String _mode = 'single'; // 'single' | 'batch'
-  String _engine = 'ddcolor'; // 'deoldify_fp32' | 'deoldify_int8' | 'ddcolor'
+  String _engine = 'deoldify_fp32'; // 'deoldify_fp32' | 'deoldify_int8' | 'ddcolor'
   bool _useNnapi = true;
 
   // 模型状态
@@ -179,11 +179,21 @@ class _HomePageState extends State<HomePage> {
       _log = '正在上色...';
     });
     try {
+      // 若用户选了输出目录，保存到该目录；否则由原生侧用默认 Pictures/AiColorize
+      String? outputPath;
+      if (_outputDir != null) {
+        final inputName = File(_inputPath!).uri.pathSegments.last;
+        final baseName = inputName.contains('.')
+            ? inputName.substring(0, inputName.lastIndexOf('.'))
+            : inputName;
+        outputPath = '$_outputDir/${baseName}_colorized.png';
+      }
       final out = await ColorizeService.colorize(
         inputPath: _inputPath!,
         modelPath: _modelPath!,
         type: _engine,
         useNnapi: _useNnapi,
+        outputPath: outputPath,
       );
       setState(() {
         _resultPath = out;
@@ -437,15 +447,19 @@ class _HomePageState extends State<HomePage> {
                 ),
               ],
             ),
-            if (_mode == 'batch') ...[
-              const SizedBox(height: 8),
-              ElevatedButton(
-                onPressed: _processing ? null : _pickOutputDir,
-                child: const Text('选择输出目录'),
-              ),
-              Text(_outputDir == null ? '未选择输出目录' : '输出: $_outputDir',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey)),
-            ],
+            const SizedBox(height: 8),
+            ElevatedButton(
+              onPressed: _processing ? null : _pickOutputDir,
+              child: const Text('选择输出目录'),
+            ),
+            Text(
+              _outputDir == null
+                  ? (_mode == 'single'
+                      ? '未选择（默认保存到 Pictures/AiColorize）'
+                      : '未选择输出目录')
+                  : '输出: $_outputDir',
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
             const SizedBox(height: 8),
             Text(
               _mode == 'single'
