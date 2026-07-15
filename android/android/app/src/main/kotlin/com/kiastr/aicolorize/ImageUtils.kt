@@ -1,0 +1,70 @@
+package com.kiastr.aicolorize
+
+import android.graphics.Bitmap
+import org.opencv.android.Utils
+import org.opencv.core.CvType
+import org.opencv.core.Mat
+import org.opencv.imgproc.Imgproc
+import java.nio.FloatBuffer
+
+/**
+ * Bitmap ↔ OpenCV Mat ↔ ONNX FloatBuffer 的编解码工具。
+ * 所有通道顺序、值域均对齐桌面版 cv2 行为。
+ */
+object ImageUtils {
+
+    /** Bitmap(ARGB_8888) -> OpenCV BGR Mat(uint8) */
+    fun bitmapToBgrMat(bitmap: Bitmap): Mat {
+        val rgba = Mat()
+        Utils.bitmapToMat(bitmap, rgba) // 输出 RGBA 四通道
+        val bgr = Mat()
+        Imgproc.cvtColor(rgba, bgr, Imgproc.COLOR_RGBA2BGR)
+        rgba.release()
+        return bgr
+    }
+
+    /** OpenCV BGR Mat -> Bitmap(ARGB_8888) */
+    fun bgrMatToBitmap(bgr: Mat): Bitmap {
+        val rgba = Mat()
+        Imgproc.cvtColor(bgr, rgba, Imgproc.COLOR_BGR2RGBA)
+        val bmp = Bitmap.createBitmap(bgr.width(), bgr.height(), Bitmap.Config.ARGB_8888)
+        Utils.matToBitmap(rgba, bmp)
+        rgba.release()
+        return bmp
+    }
+
+    /**
+     * HWC Mat(CV_32F) -> NCHW FloatBuffer [C,H,W]
+     * 与 numpy.transpose((2,0,1)) 再 expand_dims(0) 等价。
+     */
+    fun hwcToNchwFloatBuffer(mat: Mat): FloatBuffer {
+        val h = mat.height()
+        val w = mat.width()
+        val c = mat.channels()
+        val data = FloatArray(h * w * c)
+        mat.get(0, 0, data) // OpenCV Mat 按 HWC row-major 存储
+        val buf = FloatBuffer.allocate(c * h * w)
+        for (ch in 0 until c) {
+            for (y in 0 until h) {
+                for (x in 0 until w) {
+                    buf.put(data[(y * w + x) * c + ch])
+                }
+            }
+        }
+        buf.rewind()
+        return buf
+    }
+
+    /**
+     * NCHW FloatBuffer [C,H,W] -> HWC Mat(CV_32F)
+     * 与 numpy.transpose(1,2,0) 等价。
+     */
+    fun nchwToHwcMat(buf: FloatBuffer, c: Int, h: Int, w: Int): Mat {
+        buf.rewind()
+        val mat = Mat(h, w, CvType.CV_32FC(c))
+        val data = FloatArray(c * h * w)
+        buf.get(data)
+        mat.put(0, 0, data) // OpenCV put 期望 HWC 顺序
+        return mat
+    }
+}

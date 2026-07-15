@@ -1,0 +1,31 @@
+name: aicolorize
+description: 漫画 AI 一键上色安卓工具（移植自 Kiastr/AiColorize）
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=2.17.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.2
+  # 文件/目录选择
+  file_picker: ^5.2.0
+  # 模型下载（多镜像源、进度、取消）
+  dio: ^4.0.6
+  # 应用私有目录
+  path_provider: ^2.0.15
+  # 存储/相册权限
+  permission_handler: ^9.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true

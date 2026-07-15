@@ -1,0 +1,36 @@
+buildscript {
+    ext.kotlin_version = '1.8.20'
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.1.2'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    tasks.withType(JavaCompile) {
+        // 关闭 -Werror：Java 20 下 source/target 8 会触发 obsolete 警告，
+        // 默认被当作错误导致编译失败（Flutter 3.0 + 高版本 JDK 的已知兼容问题）
+        options.compilerArgs.remove("-Werror")
+    }
+}
+
+rootProject.buildDir = '../build'
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+}
+subprojects {
+    project.evaluationDependsOn(':app')
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
