@@ -58,13 +58,25 @@ object ImageUtils {
     /**
      * NCHW FloatBuffer [C,H,W] -> HWC Mat(CV_32F)
      * 与 numpy.transpose(1,2,0) 等价。
+     *
+     * 注意：OpenCV Mat.put 期望 HWC 交错顺序，而模型输出是 NCHW（通道分离），
+     * 必须显式转置，否则空间与通道会被打乱（表现为原图线条完好但散布随机彩点）。
      */
     fun nchwToHwcMat(buf: FloatBuffer, c: Int, h: Int, w: Int): Mat {
         buf.rewind()
+        val nchw = FloatArray(c * h * w)
+        buf.get(nchw) // NCHW: [ch][y][x] = nchw[ch*(h*w) + y*w + x]
+        // 转置 NCHW -> HWC
+        val hwc = FloatArray(c * h * w)
+        for (ch in 0 until c) {
+            for (y in 0 until h) {
+                for (x in 0 until w) {
+                    hwc[(y * w + x) * c + ch] = nchw[ch * (h * w) + y * w + x]
+                }
+            }
+        }
         val mat = Mat(h, w, CvType.CV_32FC(c))
-        val data = FloatArray(c * h * w)
-        buf.get(data)
-        mat.put(0, 0, data) // OpenCV put 期望 HWC 顺序
+        mat.put(0, 0, hwc) // HWC 交错顺序
         return mat
     }
 }
