@@ -7,6 +7,6 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         // 注册原生上色插件（MethodChannel）
-        ColorizePlugin.registerWith(flutterEngine)
+        ColorizePlugin.registerWith(flutterEngine, applicationContext)
     }
 }

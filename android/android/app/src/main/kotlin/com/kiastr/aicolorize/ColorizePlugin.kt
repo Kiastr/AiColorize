@@ -1,5 +1,7 @@
 package com.kiastr.aicolorize
 
+import android.content.Context
+import android.os.Environment
 import android.os.Handler
 import android.os.Looper
 import io.flutter.embedding.engine.FlutterEngine
@@ -12,14 +14,14 @@ import java.util.concurrent.Executors
  * MethodChannel 桥接：Dart 侧通过 'colorize' 方法调用原生计算核心。
  * 单次调用完成：输入图片 -> 预处理 -> ONNX 推理 -> 后处理 -> 输出图片路径。
  */
-class ColorizePlugin : MethodChannel.MethodCallHandler {
+class ColorizePlugin(private val appContext: Context) : MethodChannel.MethodCallHandler {
 
     companion object {
         const val CHANNEL = "com.kiastr.aicolorize/colorize"
 
-        fun registerWith(flutterEngine: FlutterEngine) {
+        fun registerWith(flutterEngine: FlutterEngine, appContext: Context) {
             val channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
-            channel.setMethodCallHandler(ColorizePlugin())
+            channel.setMethodCallHandler(ColorizePlugin(appContext))
         }
     }
 
@@ -50,7 +52,14 @@ class ColorizePlugin : MethodChannel.MethodCallHandler {
                 val outputFile = if (outputPath != null) {
                     File(outputPath)
                 } else {
-                    File(inputFile.parent, "${inputFile.nameWithoutExtension}_colorized.png")
+                    // 默认保存到 app 外部 Pictures 目录（文件管理器可直接访问，无需 root）
+                    // 路径: /storage/emulated/0/Android/data/com.kiastr.aicolorize/files/Pictures/AiColorize/
+                    val outDir = File(
+                        appContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
+                        "AiColorize"
+                    )
+                    if (!outDir.exists()) outDir.mkdirs()
+                    File(outDir, "${inputFile.nameWithoutExtension}_colorized.png")
                 }
                 val out = engine.colorize(inputFile, outputFile, modelPath, type, useNnapi)
                 mainHandler.post { result.success(out.absolutePath) }

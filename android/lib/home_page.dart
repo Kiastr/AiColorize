@@ -55,8 +55,10 @@ class _HomePageState extends State<HomePage> {
   ModelConfig get _currentConfig => modelConfigs[_engine]!;
 
   Future<String> _modelsDir() async {
-    final dir = await getApplicationDocumentsDirectory();
-    final models = Directory('${dir.path}/models');
+    // 用外部存储目录（/storage/emulated/0/Android/data/<pkg>/files/models），
+    // 便于用户用文件管理器手动放入/查看 ONNX 模型，无需 root
+    final dir = await getExternalStorageDirectory();
+    final models = Directory('${dir!.path}/models');
     if (!await models.exists()) {
       await models.create(recursive: true);
     }
