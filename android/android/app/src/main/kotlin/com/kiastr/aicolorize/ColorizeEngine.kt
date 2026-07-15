@@ -32,8 +32,17 @@ class ColorizeEngine {
         type: String,
         useNnapi: Boolean
     ): File {
-        val bitmap = BitmapFactory.decodeFile(inputFile.absolutePath)
+        var bitmap = BitmapFactory.decodeFile(inputFile.absolutePath)
             ?: throw IllegalArgumentException("无法解码图片: ${inputFile.absolutePath}")
+        // Utils.bitmapToMat 要求 ARGB_8888；非该配置会产出异常/空 Mat（曾导致 resize 空源崩溃）
+        if (bitmap.config != Bitmap.Config.ARGB_8888) {
+            val converted = bitmap.copy(Bitmap.Config.ARGB_8888, false)
+            bitmap.recycle()
+            bitmap = converted
+        }
+        if (bitmap.width <= 0 || bitmap.height <= 0) {
+            throw IllegalArgumentException("图片尺寸无效: ${bitmap.width}x${bitmap.height}")
+        }
         val session = modelManager.getSession(modelPath, useNnapi)
         val outBitmap = if (type == "ddcolor") {
             colorizeDdcolor(bitmap, session)
@@ -77,9 +86,9 @@ class ColorizeEngine {
         val inputName = session.inputNames.iterator().next()
         val tensor = OnnxTensor.createTensor(env, buf, longArrayOf(1, 3, 256, 256))
         val results = session.run(Collections.singletonMap(inputName, tensor))
-        val outputName = session.outputNames.iterator().next()
-        val outValue = results[outputName]!!
-        val outBuf = (outValue as OnnxTensor).floatBuffer // (1,3,256,256) NCHW BGR 0–255
+        // Result.get(String) 返回 Optional<OnnxValue>（直接转型 OnnxTensor 会 ClassCastException），
+        // 改用 get(int) 直接取 OnnxValue
+        val outBuf = (results.get(0) as OnnxTensor).floatBuffer // (1,3,256,256) NCHW BGR 0–255
         val colorized256 = ImageUtils.nchwToHwcMat(outBuf, 3, 256, 256) // (256,256,3) BGR
         tensor.close()
         results.close()
@@ -188,9 +197,9 @@ class ColorizeEngine {
         val inputName = session.inputNames.iterator().next()
         val tensor = OnnxTensor.createTensor(env, buf, longArrayOf(1, 3, 256, 256))
         val results = session.run(Collections.singletonMap(inputName, tensor))
-        val outputName = session.outputNames.iterator().next()
-        val outValue = results[outputName]!!
-        val outBuf = (outValue as OnnxTensor).floatBuffer // (1,2,256,256) NCHW ab
+        // Result.get(String) 返回 Optional<OnnxValue>（直接转型 OnnxTensor 会 ClassCastException），
+        // 改用 get(int) 直接取 OnnxValue
+        val outBuf = (results.get(0) as OnnxTensor).floatBuffer // (1,2,256,256) NCHW ab
         val ab256 = ImageUtils.nchwToHwcMat(outBuf, 2, 256, 256) // (256,256,2) ab
         tensor.close()
         results.close()
