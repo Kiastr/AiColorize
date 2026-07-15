@@ -48,7 +48,7 @@ final Map<String, ModelConfig> modelConfigs = {
     label: 'DeOldify (fp32, 243MB, 高质量)',
     sources: [
       ..._githubSources('deoldify_fp32.onnx'),
-      ModelSource(
+      const ModelSource(
         'GitHub instant-high (备用)',
         'https://github.com/instant-high/deoldify-onnx/releases/download/deoldify-onnx/deoldify.onnx',
       ),
@@ -60,7 +60,7 @@ final Map<String, ModelConfig> modelConfigs = {
     label: 'DeOldify (int8, 61MB, 省流量)',
     sources: [
       ..._githubSources('deoldify_int8.onnx'),
-      ModelSource(
+      const ModelSource(
         'GitHub MartinDelophy (备用)',
         'https://github.com/MartinDelophy/deoldify-onnx-web/releases/download/v1.0.0/deoldify.quant.onnx',
       ),
@@ -72,7 +72,7 @@ final Map<String, ModelConfig> modelConfigs = {
     label: 'DDColor (int8, 59MB, 漫画风)',
     sources: [
       ..._githubSources('ddcolor-int8.onnx'),
-      ModelSource(
+      const ModelSource(
         'HuggingFace Faridzar (备用)',
         'https://huggingface.co/Faridzar/ddcolor-mirror/resolve/main/ddcolor-int8.onnx',
       ),
