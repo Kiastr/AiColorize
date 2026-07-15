@@ -27,11 +27,15 @@ class ModelConfig {
 const Map<String, ModelConfig> modelConfigs = {
   'deoldify': ModelConfig(
     key: 'deoldify',
-    filename: 'deoldify.quant.onnx',
-    label: 'DeOldify (int8 量化, 推荐)',
+    filename: 'deoldify.onnx',
+    label: 'DeOldify (fp32, 推荐)',
     sources: [
       ModelSource(
-        'GitHub MartinDelophy',
+        'GitHub instant-high (fp32, 243MB)',
+        'https://github.com/instant-high/deoldify-onnx/releases/download/deoldify-onnx/deoldify.onnx',
+      ),
+      ModelSource(
+        'GitHub MartinDelophy (int8 量化, 61MB, 备用)',
         'https://github.com/MartinDelophy/deoldify-onnx-web/releases/download/v1.0.0/deoldify.quant.onnx',
       ),
     ],
