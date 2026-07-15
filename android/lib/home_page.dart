@@ -17,7 +17,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   // 配置状态
   String _mode = 'single'; // 'single' | 'batch'
-  String _engine = 'ddcolor'; // 'ddcolor' | 'deoldify'
+  String _engine = 'ddcolor'; // 'deoldify_fp32' | 'deoldify_int8' | 'ddcolor'
   bool _useNnapi = true;
 
   // 模型状态
