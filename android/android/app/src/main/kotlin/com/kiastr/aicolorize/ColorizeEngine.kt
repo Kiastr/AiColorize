@@ -163,7 +163,6 @@ class ColorizeEngine {
         // orig_l = BGR2Lab[:,:,:1]（float LAB, L∈[0,100]）
         val labFull = Mat()
         Imgproc.cvtColor(imgNorm, labFull, Imgproc.COLOR_BGR2Lab)
-        imgNorm.release()
         val origL = Mat()
         Core.extractChannel(labFull, origL, 0)
         labFull.release()
@@ -178,6 +177,9 @@ class ColorizeEngine {
         Core.extractChannel(labResized, imgL, 0)
         labResized.release()
         imgResized.release()
+        // ★ 必须等 resize(imgNorm, ...) 用完后再释放，否则 imgNorm 变空 Mat，
+        //   resize 会抛 !ssize.empty()（OpenCV(4.11.0) resize.cpp:4208）
+        imgNorm.release()
 
         // gray_lab = concat(img_l, 0, 0)
         val zeros = Mat(imgL.size(), imgL.type(), Scalar(0.0))
