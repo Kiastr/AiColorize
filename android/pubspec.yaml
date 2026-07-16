@@ -2,7 +2,7 @@ name: aicolorize
 description: 漫画 AI 一键上色安卓工具（移植自 Kiastr/AiColorize）
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.0.7+7
 
 environment:
   sdk: ">=2.17.0 <3.0.0"
